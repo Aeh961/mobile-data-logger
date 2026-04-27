@@ -29,6 +29,10 @@ import android.content.Context
 import androidx.compose.foundation.layout.Row
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.layout.Arrangement
+
 
 
 
@@ -53,8 +57,8 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(16.dp)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
                             text = "Mobile Data Logger",
@@ -126,18 +130,24 @@ class MainActivity : ComponentActivity() {
 
                         LazyColumn {
                             items(dataList) { entry ->
-                                Row {
-                                    Text(
-                                        text = entry,
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    Button(onClick = {
-                                        val updatedList = dataList.filter { it != entry }
-                                        dataList = updatedList
-                                        val prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-                                        prefs.edit().putStringSet("entries", updatedList.toSet())
-                                            .apply()
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp)
+                                    ){
+                                        Text(
+                                            text = entry,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Button(onClick ={
+                                            val updatedList =dataList.filter { it != entry }
+                                            dataList = updatedList
+                                            val prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE)
+                                            prefs.edit().putStringSet("entries", updatedList.toSet()).apply()
                                     }) {
                                         Text("Delete")
                                     }
@@ -168,4 +178,5 @@ fun GreetingPreview() {
     MobileDataLoggerTheme {
         Greeting("Android")
     }
+}
 }
