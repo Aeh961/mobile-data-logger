@@ -26,6 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobiledatalogger.ui.theme.MobileDataLoggerTheme
 import android.content.Context
+import androidx.compose.foundation.layout.Row
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,7 +101,22 @@ class MainActivity : ComponentActivity() {
 
                         LazyColumn {
                             items(dataList) { entry ->
-                                Text(entry)
+                                Row {
+                                    Text(
+                                        text = entry,
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    Button(onClick = {
+                                        val updatedList = dataList.filter { it != entry }
+                                        dataList = updatedList
+                                        val prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE)
+                                        prefs.edit().putStringSet("entries", updatedList.toSet())
+                                            .apply()
+                                    }) {
+                                        Text("Delete")
+                                    }
+                                }
                             }
 
 
