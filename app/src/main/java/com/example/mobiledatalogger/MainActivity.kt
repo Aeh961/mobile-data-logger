@@ -25,15 +25,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobiledatalogger.ui.theme.MobileDataLoggerTheme
+import android.content.Context
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val context = this
+            var dataList by remember {
+                mutableStateOf(
+                    context.getSharedPreferences("data", Context.MODE_PRIVATE)
+                        .getStringSet("entries", emptySet())!!
+                        .toList()
+                )
+            }
             var inputText by remember { mutableStateOf("") }
-            var dataList by remember { mutableStateOf(listOf<String>()) }
-
             MobileDataLoggerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
@@ -61,12 +68,20 @@ class MainActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 if (inputText.isNotBlank()) {
+
                                     val timestamp = java.text.SimpleDateFormat(
                                         "yyyy-MM-dd HH:mm:ss",
                                         java.util.Locale.getDefault()
                                     ).format(java.util.Date())
 
-                                    dataList = dataList + "$timestamp - $inputText"
+                                    val newEntry = "$timestamp - $inputText"
+                                    val updatedList = dataList + newEntry
+
+                                    dataList = updatedList
+
+                                    val prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE)
+                                    prefs.edit().putStringSet("entries", updatedList.toSet()).apply()
+
                                     inputText = ""
                                 }
                             },
@@ -86,6 +101,8 @@ class MainActivity : ComponentActivity() {
                             items(dataList) { entry ->
                                 Text(entry)
                             }
+
+
                         }
                     }
                 }
