@@ -32,8 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.layout.Arrangement
-
-
+import org.json.JSONArray
 
 
 class MainActivity : ComponentActivity() {
@@ -104,7 +103,11 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                val exportText = dataList.joinToString(separator = "/n")
+                                val jsonArray = JSONArray()
+                                dataList.forEach { entry ->
+                                    jsonArray.put(entry)
+                                }
+                                val exportText = jsonArray.toString(4)
                                 val sendIntent = Intent().apply() {
                                     action = Intent.ACTION_SEND
                                     putExtra(Intent.EXTRA_TEXT, exportText)
