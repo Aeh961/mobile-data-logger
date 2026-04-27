@@ -33,5 +33,5 @@ This project is part of my effort to learn mobile development and explore how mo
 Abdallah El Hamawi
 
 ##
-![screen1.png](../../Desktop/screen1.png)
-![screen2.png](../../Desktop/screen2.png)
+![screen1.png](screenshots/screen1.png)
+![screen2.png](screenshots/screen2.png)
