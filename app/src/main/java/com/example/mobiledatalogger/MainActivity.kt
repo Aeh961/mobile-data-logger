@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import com.example.mobiledatalogger.ui.theme.MobileDataLoggerTheme
 import android.content.Context
 import androidx.compose.foundation.layout.Row
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+
 
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +38,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val context = this
+            val localContext = LocalContext.current
+
             var dataList by remember {
                 mutableStateOf(
                     context.getSharedPreferences("data", Context.MODE_PRIVATE)
@@ -91,6 +96,26 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text("Add Entry")
                         }
+                        Spacer(modifier = Modifier.padding(8.dp))
+
+                        Button(
+                            onClick = {
+                                val exportText = dataList.joinToString(separator = "/n")
+                                val sendIntent = Intent().apply() {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, exportText)
+                                    type = "text/plain"
+                                }
+
+                                val shareIntent = Intent.createChooser(sendIntent, "Export Data")
+                                localContext.startActivity(shareIntent)
+                            },
+
+                            modifier = Modifier.fillMaxWidth()
+                        ){
+                            Text("Export Data")
+                    }
+
 
                         Spacer(modifier = Modifier.padding(12.dp))
 
