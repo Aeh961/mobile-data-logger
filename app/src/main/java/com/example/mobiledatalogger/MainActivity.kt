@@ -42,6 +42,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = this
             val localContext = LocalContext.current
+            var selectedType by remember { mutableStateOf("Health") }
+
 
             var dataList by remember {
                 mutableStateOf(
@@ -65,11 +67,24 @@ class MainActivity : ComponentActivity() {
                         )
 
                         Spacer(modifier = Modifier.padding(8.dp))
-
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement =  Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(onClick = { selectedType = "Health"}){
+                                Text ("health")
+                            }
+                            Button(onClick = { selectedType = "Activity"}){
+                                Text("Activity")
+                            }
+                            Button( onClick = { selectedType = "Sleep"}){
+                                Text("Sleep")
+                            }
+                        }
                         TextField(
                             value = inputText,
                             onValueChange = { inputText = it },
-                            label = { Text("Enter data") },
+                            label = { Text("Log health, activity, or sleep data") },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -84,7 +99,7 @@ class MainActivity : ComponentActivity() {
                                         java.util.Locale.getDefault()
                                     ).format(java.util.Date())
 
-                                    val newEntry = "$timestamp - $inputText"
+                                    val newEntry = "$timestamp [$selectedType] - $inputText"
                                     val updatedList = dataList + newEntry
 
                                     dataList = updatedList
