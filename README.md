@@ -24,6 +24,12 @@ This project is part of my effort to learn mobile development and explore how mo
 - Added timestamped data entries
 - Improved layout and UI
 
+## AI Insight Feature (v1)
+
+This version includes a basic "Generate Insight" feature that simulates AI-driven health insights based on logged data.
+
+The current implementation uses simple rule-based logic, but is designed to be extended with generative AI models to provide personalized feedback on health, activity, and sleep patterns.
+
 ## Next Steps
 - Save data permanently (local storage)
 - Add export functionality (JSON/CSV)
