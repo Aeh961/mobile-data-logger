@@ -10,6 +10,7 @@ This project is part of my effort to learn mobile development and explore how mo
 - Add entries with timestamps
 - Scrollable list of entries
 - Clean UI using Jetpack Compose
+- Generate simple AI-style insights based on logged health, activity, and sleep data
 
 ## Tech Stack
 - Kotlin
