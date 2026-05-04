@@ -137,6 +137,27 @@ class MainActivity : ComponentActivity() {
                         ){
                             Text("Export Data")
                     }
+                        var insightText by remember { mutableStateOf("") }
+
+                        Button(
+                            onClick = {
+                                if (dataList.isEmpty()) {
+                                    insightText = "No data to analyze yet."
+                                } else {
+                                    insightText = "You have been logging consistently. Try improving sleep consistency and maintaining activity levels."
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Generate Insight")
+                        }
+
+                        if (insightText.isNotEmpty()) {
+                            Text(
+                                text = insightText,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
 
 
                         Spacer(modifier = Modifier.padding(12.dp))
