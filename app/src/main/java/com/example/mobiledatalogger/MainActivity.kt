@@ -144,12 +144,26 @@ class MainActivity : ComponentActivity() {
                                 if (dataList.isEmpty()) {
                                     insightText = "No data to analyze yet."
                                 } else {
-                                    insightText = "You have been logging consistently. Try improving sleep consistency and maintaining activity levels."
+                                    val sleepEntries = dataList.count { it.contains("[Sleep]") }
+                                    val activityEntries = dataList.count { it.contains("[Activity]") }
+                                    val healthEntries = dataList.count { it.contains("[Health]") }
+
+                                    val total = dataList.size
+                                    val sleepRatio = sleepEntries.toFloat() / total
+                                    val activityRatio = activityEntries.toFloat() / total
+
+                                    insightText = when {
+                                        sleepRatio < 0.3 -> "Your sleep logs are low. Try tracking sleep more consistently."
+                                        activityRatio < 0.3 -> "Your activity logs are low. Consider increasing activity tracking."
+                                        activityRatio > 0.5 -> "Great activity consistency. Consider increasing intensity gradually."
+                                        sleepRatio > 0.5 -> "You are logging sleep frequently. Focus on improving sleep quality."
+                                        else -> "Your logging is balanced. Keep tracking consistently to identify trends."
+                                    }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Generate Insight")
+                            Text("Get Insights")
                         }
 
                         if (insightText.isNotEmpty()) {
@@ -158,7 +172,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
-
 
                         Spacer(modifier = Modifier.padding(12.dp))
 
