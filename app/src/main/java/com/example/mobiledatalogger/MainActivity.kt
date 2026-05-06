@@ -1,10 +1,14 @@
 package com.example.mobiledatalogger
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,38 +16,41 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.mobiledatalogger.ui.theme.MobileDataLoggerTheme
-import android.content.Context
-import androidx.compose.foundation.layout.Row
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.foundation.layout.Arrangement
+import kotlinx.coroutines.launch
 import org.json.JSONArray
-
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             val context = this
             val localContext = LocalContext.current
-            var selectedType by remember { mutableStateOf("Health") }
+            val scope = rememberCoroutineScope()
 
+            var selectedType by remember { mutableStateOf("Health") }
+            var inputText by remember { mutableStateOf("") }
+            var insightText by remember { mutableStateOf("") }
+            var isLoading by remember { mutableStateOf(false) }
 
             var dataList by remember {
                 mutableStateOf(
@@ -52,12 +59,13 @@ class MainActivity : ComponentActivity() {
                         .toList()
                 )
             }
-            var inputText by remember { mutableStateOf("") }
+
             MobileDataLoggerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .padding(innerPadding)
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -66,21 +74,28 @@ class MainActivity : ComponentActivity() {
                             style = MaterialTheme.typography.headlineMedium
                         )
 
-                        Spacer(modifier = Modifier.padding(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement =  Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(onClick = { selectedType = "Health"}){
-                                Text ("health")
+                            Button(onClick = { selectedType = "Health" }) {
+                                Text("Health")
                             }
-                            Button(onClick = { selectedType = "Activity"}){
+
+                            Button(onClick = { selectedType = "Activity" }) {
                                 Text("Activity")
                             }
-                            Button( onClick = { selectedType = "Sleep"}){
+
+                            Button(onClick = { selectedType = "Sleep" }) {
                                 Text("Sleep")
                             }
                         }
+
+                        Text(
+                            text = "Selected: $selectedType",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
                         TextField(
                             value = inputText,
                             onValueChange = { inputText = it },
@@ -88,16 +103,13 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.padding(8.dp))
-
                         Button(
                             onClick = {
                                 if (inputText.isNotBlank()) {
-
-                                    val timestamp = java.text.SimpleDateFormat(
+                                    val timestamp = SimpleDateFormat(
                                         "yyyy-MM-dd HH:mm:ss",
-                                        java.util.Locale.getDefault()
-                                    ).format(java.util.Date())
+                                        Locale.getDefault()
+                                    ).format(Date())
 
                                     val newEntry = "$timestamp [$selectedType] - $inputText"
                                     val updatedList = dataList + newEntry
@@ -114,16 +126,18 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text("Add Entry")
                         }
-                        Spacer(modifier = Modifier.padding(8.dp))
 
                         Button(
                             onClick = {
                                 val jsonArray = JSONArray()
+
                                 dataList.forEach { entry ->
                                     jsonArray.put(entry)
                                 }
+
                                 val exportText = jsonArray.toString(4)
-                                val sendIntent = Intent().apply() {
+
+                                val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(Intent.EXTRA_TEXT, exportText)
                                     type = "text/plain"
@@ -132,38 +146,47 @@ class MainActivity : ComponentActivity() {
                                 val shareIntent = Intent.createChooser(sendIntent, "Export Data")
                                 localContext.startActivity(shareIntent)
                             },
-
                             modifier = Modifier.fillMaxWidth()
-                        ){
+                        ) {
                             Text("Export Data")
-                    }
-                        var insightText by remember { mutableStateOf("") }
+                        }
 
                         Button(
                             onClick = {
                                 if (dataList.isEmpty()) {
                                     insightText = "No data to analyze yet."
                                 } else {
-                                    val sleepEntries = dataList.count { it.contains("[Sleep]") }
-                                    val activityEntries = dataList.count { it.contains("[Activity]") }
-                                    val healthEntries = dataList.count { it.contains("[Health]") }
+                                    scope.launch {
+                                        isLoading = true
 
-                                    val total = dataList.size
-                                    val sleepRatio = sleepEntries.toFloat() / total
-                                    val activityRatio = activityEntries.toFloat() / total
+                                        try {
+                                            val combinedData = dataList.joinToString("\n")
 
-                                    insightText = when {
-                                        sleepRatio < 0.3 -> "Your sleep logs are low. Try tracking sleep more consistently."
-                                        activityRatio < 0.3 -> "Your activity logs are low. Consider increasing activity tracking."
-                                        activityRatio > 0.5 -> "Great activity consistency. Consider increasing intensity gradually."
-                                        sleepRatio > 0.5 -> "You are logging sleep frequently. Focus on improving sleep quality."
-                                        else -> "Your logging is balanced. Keep tracking consistently to identify trends."
+                                            val response = RetrofitClient.api.getAiSummary(
+                                                AiSummaryRequest(
+                                                    sleep = "Based on logs",
+                                                    activity = "Based on logs",
+                                                    mood = "Unknown",
+                                                    notes = combinedData
+                                                )
+                                            )
+
+                                            insightText = response.suggestion
+                                        } catch (e: Exception) {
+                                            insightText = "Error connecting to backend: ${e.message}"
+                                        }
+
+                                        isLoading = false
                                     }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Get Insights")
+                            Text("Get AI Insights")
+                        }
+
+                        if (isLoading) {
+                            Text("Loading AI...")
                         }
 
                         if (insightText.isNotEmpty()) {
@@ -173,14 +196,16 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        Spacer(modifier = Modifier.padding(12.dp))
+                        Spacer(modifier = Modifier.padding(8.dp))
 
                         Text(
                             text = "Entries",
                             style = MaterialTheme.typography.titleMedium
                         )
 
-                        LazyColumn {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             items(dataList) { entry ->
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
@@ -189,46 +214,37 @@ class MainActivity : ComponentActivity() {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(12.dp)
-                                    ){
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
                                         Text(
                                             text = entry,
                                             modifier = Modifier.weight(1f)
                                         )
-                                        Button(onClick ={
-                                            val updatedList =dataList.filter { it != entry }
-                                            dataList = updatedList
-                                            val prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-                                            prefs.edit().putStringSet("entries", updatedList.toSet()).apply()
-                                    }) {
-                                        Text("Delete")
+
+                                        Button(
+                                            onClick = {
+                                                val updatedList = dataList.filter { it != entry }
+                                                dataList = updatedList
+
+                                                val prefs = context.getSharedPreferences(
+                                                    "data",
+                                                    Context.MODE_PRIVATE
+                                                )
+                                                prefs.edit()
+                                                    .putStringSet("entries", updatedList.toSet())
+                                                    .apply()
+                                            }
+                                        ) {
+                                            Text("Delete")
+                                        }
                                     }
                                 }
                             }
-
-
                         }
                     }
                 }
             }
         }
     }
-}
-
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MobileDataLoggerTheme {
-        Greeting("Android")
-    }
-}
 }

@@ -1,4 +1,3 @@
-*.iml
 .gradle
 /local.properties
 /.idea/caches
@@ -13,3 +12,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+fitness-ai-backend/node_modules
+fitness-ai-backend/.env
